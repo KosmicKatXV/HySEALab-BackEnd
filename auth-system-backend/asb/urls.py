@@ -1,10 +1,12 @@
 from django.contrib import admin
 from django.urls import include, path
+from rest_framework.authtoken.views import obtain_auth_token
 from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path(r'api/auth/', include('knox.urls')),
-    path('api/register', views.UserCreate.as_view()),
-    # path('api/modinfo', views.UserInfoCreate.as_view())
+    path('api/register/', views.UserCreate.as_view()),
+    path('auth/', obtain_auth_token, name='auth'),
+
+    # path('api/modinfo', views.UserInfoCreate.as_view())   
 ]
