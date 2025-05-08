@@ -6,7 +6,9 @@ from . import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/register/', views.UserCreate.as_view()),
-    path('auth/', obtain_auth_token, name='auth'),
+    path('api/login/', views.Login.as_view()),
+    #path('api-token-auth/', views.obtain_auth_token),
+    path('api/auth/', obtain_auth_token, name='auth')
 
     # path('api/modinfo', views.UserInfoCreate.as_view())   
 ]

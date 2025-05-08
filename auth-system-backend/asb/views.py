@@ -26,12 +26,13 @@ class UserCreate(generics.CreateAPIView):
 
 class Login(generics.CreateAPIView):
     serializer_class = LoginSerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = []
+    permission_classes = (AllowAny,)
 
     def post(self, request):
         serializer = LoginSerializer(data = request.data)
         if serializer.is_valid(raise_exception=True):
-            user = authenticate(username=serializer.data['username'], password=serializer.data['password'])
+            user = authenticate(email=serializer.data['email'], password=serializer.data['password'])
             if user:
                 token, created = Token.objects.get_or_create(user=user)
                 return Response({'token': [token.key], "Sucsses":"Login SucssesFully"}, status=status.HTTP_201_CREATED )
