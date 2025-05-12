@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.permissions import BasePermission, IsAuthenticated, AllowAny , SAFE_METHODS
+from rest_framework.authtoken.models import Token
 
 from knox.auth import TokenAuthentication
 
@@ -23,6 +24,10 @@ class UserCreate(generics.CreateAPIView):
             return HttpResponse(serializer.data, status=204)
         else:
             return HttpResponse(serializer.data, status=403)
+            
+    def get(self,request):
+        user_id = Token.objects.get(key=request.auth.key).user_id
+        user = User.objects.get(id=user_id)
 
 class Login(generics.CreateAPIView):
     serializer_class = LoginSerializer

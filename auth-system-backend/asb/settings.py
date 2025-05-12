@@ -32,6 +32,8 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'asb',
+    'k8s',
+    'job_dispatcher',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
