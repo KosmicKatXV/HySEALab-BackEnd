@@ -3,9 +3,7 @@ from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.permissions import BasePermission, IsAuthenticated, AllowAny , SAFE_METHODS
-from rest_framework.authtoken.models import Token
-
-from knox.auth import TokenAuthentication
+from rest_framework.authentication import TokenAuthentication
 
 from django.contrib.auth import get_user_model
 User = get_user_model()
@@ -40,5 +38,5 @@ class Login(generics.CreateAPIView):
             user = authenticate(email=serializer.data['email'], password=serializer.data['password'])
             if user:
                 token, created = Token.objects.get_or_create(user=user)
-                return Response({'token': [token.key], "Sucsses":"Login SucssesFully"}, status=status.HTTP_201_CREATED )
+                return Response({'token': [token.key], "Sucsess":"Login SucssesFully"}, status=status.HTTP_201_CREATED )
             return Response({'Massage': 'Invalid Username and Password'}, status=401)
