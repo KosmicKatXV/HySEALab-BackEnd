@@ -30,15 +30,15 @@ class CustomUserManager(BaseUserManager):
       return self.create_user(email, password, **extra_fields)
 
 class CustomUser(AbstractUser):
-    email = models.EmailField(max_length=100, unique=True)
-    username = None
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['password','first_name','last_name']
+   email = models.EmailField(max_length=100, unique=True)
+   username = None
+   USERNAME_FIELD = 'email'
+   REQUIRED_FIELDS = ['password','first_name','last_name']
 
-    objects = CustomUserManager()
+   objects = CustomUserManager()
 
-    def __str__(self):
-        return self.email
+   def __str__(self):
+      return self.Email
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_auth_token(sender, instance=None, created=False, **kwargs):

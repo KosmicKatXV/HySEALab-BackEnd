@@ -10,6 +10,7 @@ User = get_user_model()
 
 from asb.serializers import *
 
+
 class UserCreate(generics.CreateAPIView):
     authentication_classes = []
     permission_classes = (AllowAny,)
