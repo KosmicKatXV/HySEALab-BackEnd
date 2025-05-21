@@ -22,3 +22,10 @@ def getLabStatus(l):
 
 def getLab(l):
     return get('pod -l app=jupyter-'+l.__str__()).get('items')[0]
+
+
+def delete(object):
+    return {'name':subprocess.check_output(K+" delete "+object+' -o name',shell=True)}
+
+def deleteLab(l):
+    return delete('deployment.apps/hysea-lab-'+l.__str__())

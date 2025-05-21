@@ -47,7 +47,49 @@ class deploymentView(generics.CreateAPIView):
             return JsonResponse(data={'error':'no lab has been found'}, status=404)
     
     def delete(self,request):
-        return JsonResponse(status=404)
+        user = Token.objects.get(key=request.auth.key).user
+        lab = Lab(user=request.user)
+        try:
+            return JsonResponse(data=k.deleteLab(lab), status=200)
+        except:
+            return JsonResponse(data={'error':'internal server error'}, status=500)
+
+class volumeView(generics.CreateAPIView):
+    #autentica
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    def post(self,request):
+        user = Token.objects.get(key=request.auth.key).user
+        lab = Lab(user=request.user)
+        serializer = UserSerializer(data={'user':user.id})
+        #comprueba si hay lab asignado al usuario
+        print(lab)
+        if lab is None:
+            return JsonResponse(data={'error':'No Lanb assigned to this user'}, status=404)
+        elif not k.getLabStatus(lab).get('ready'):
+            print(k.getLabStatus(lab).get('ready'))
+            #si lo hay se comprueba que no esté levantado:
+            env = {'LAB_ID':Lab(user=request.user).__str__()}
+            lab_yml = k.deploy('lab-deployment.yaml',env)
+            return JsonResponse(data={'info':'A lab has been deployed.'}, status=200)
+        else:
+            print(k.getLabStatus(lab).get('ready'))
+            return JsonResponse(data={'warning':'A lab has already been deployed. No action has been taken'}, status=200)
+    def get(self,request):
+        user = Token.objects.get(key=request.auth.key).user
+        lab = Lab(user=request.user)
+        try:
+            return JsonResponse(data=k.getLab(lab), status=200)
+        except:
+            return JsonResponse(data={'error':'no lab has been found'}, status=404)
+    
+    def delete(self,request):
+        user = Token.objects.get(key=request.auth.key).user
+        lab = Lab(user=request.user)
+        try:
+            return JsonResponse(data=k.deleteLab(lab), status=200)
+        except:
+            return JsonResponse(data={'error':'internal server error'}, status=500)
 
 class LabView(generics.CreateAPIView):
     authentication_classes = [TokenAuthentication]
