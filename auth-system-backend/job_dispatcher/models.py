@@ -1,6 +1,5 @@
 from django.db import models
 from asb.models import CustomUser
-from k8s.models import Lab
 # Create your models here.
 
 

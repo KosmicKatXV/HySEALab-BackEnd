@@ -10,7 +10,6 @@ from rest_framework.authentication import TokenAuthentication
 from django.contrib.auth import get_user_model
 
 import k8s.k8s as k
-from k8s.models import Lab
 User = get_user_model()
 
 from asb.serializers import *
@@ -22,33 +21,22 @@ class deploymentView(generics.CreateAPIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     def post(self,request):
-        user = Token.objects.get(key=request.auth.key).user
-        lab = Lab(user=request.user)
-        serializer = UserSerializer(data={'user':user.id})
+        id = str(Token.objects.get(key=request.auth.key).user.id)
+        email = Token.objects.get(key=request.auth.key).user.__str__()
         #comprueba si hay lab asignado al usuario
-        print(lab)
-        if lab is None:
-            return JsonResponse(data={'error':'No Lanb assigned to this user'}, status=404)
-        elif not k.getLabStatus(lab).get('ready'):
-            print(k.getLabStatus(lab).get('ready'))
-            #si lo hay se comprueba que no esté levantado:
-            env = {'LAB_ID':Lab(user=request.user).__str__()}
-            lab_yml = k.deploy('lab-deployment.yaml',env)
-            return JsonResponse(data={'info':'A lab has been deployed.'}, status=200)
+        if not k.getLabStatus(id).get('ready'):
+            return JsonResponse(data=k.createLab(id,request.auth.key,email), status=200)
         else:
-            print(k.getLabStatus(lab).get('ready'))
             return JsonResponse(data={'warning':'A lab has already been deployed. No action has been taken'}, status=200)
     def get(self,request):
-        user = Token.objects.get(key=request.auth.key).user
-        lab = Lab(user=request.user)
+        lab = str(Token.objects.get(key=request.auth.key).user.id)
         try:
             return JsonResponse(data=k.getLab(lab), status=200)
         except:
             return JsonResponse(data={'error':'no lab has been found'}, status=404)
     
     def delete(self,request):
-        user = Token.objects.get(key=request.auth.key).user
-        lab = Lab(user=request.user)
+        lab = str(Token.objects.get(key=request.auth.key).user.id)
         try:
             return JsonResponse(data=k.deleteLab(lab), status=200)
         except:
@@ -59,52 +47,46 @@ class volumeView(generics.CreateAPIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     def post(self,request):
-        user = Token.objects.get(key=request.auth.key).user
-        lab = Lab(user=request.user)
-        serializer = UserSerializer(data={'user':user.id})
-        #comprueba si hay lab asignado al usuario
-        print(lab)
-        if lab is None:
-            return JsonResponse(data={'error':'No Lanb assigned to this user'}, status=404)
-        elif not k.getLabStatus(lab).get('ready'):
-            print(k.getLabStatus(lab).get('ready'))
-            #si lo hay se comprueba que no esté levantado:
-            env = {'LAB_ID':Lab(user=request.user).__str__()}
-            lab_yml = k.deploy('lab-deployment.yaml',env)
-            return JsonResponse(data={'info':'A lab has been deployed.'}, status=200)
-        else:
-            print(k.getLabStatus(lab).get('ready'))
-            return JsonResponse(data={'warning':'A lab has already been deployed. No action has been taken'}, status=200)
+        id = str(Token.objects.get(key=request.auth.key).user.id).__str__()
+        email = Token.objects.get(key=request.auth.key).user.__str__()
+        #comprueba que no haya pvc
+        if(k.checkPVC(id) == None):
+            k.createPVC(id)
+        #elif(k.checkPV(id) == None):
+        return JsonResponse(data=k.createPV(id,email), status=200)
+
     def get(self,request):
-        user = Token.objects.get(key=request.auth.key).user
-        lab = Lab(user=request.user)
+        lab = str(Token.objects.get(key=request.auth.key).user.id)
         try:
             return JsonResponse(data=k.getLab(lab), status=200)
         except:
             return JsonResponse(data={'error':'no lab has been found'}, status=404)
     
     def delete(self,request):
-        user = Token.objects.get(key=request.auth.key).user
-        lab = Lab(user=request.user)
+        lab = str(Token.objects.get(key=request.auth.key).user.id)
         try:
             return JsonResponse(data=k.deleteLab(lab), status=200)
         except:
             return JsonResponse(data={'error':'internal server error'}, status=500)
 
-class LabView(generics.CreateAPIView):
+class serviceView(generics.CreateAPIView):
+    #autentica
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
-    def post (self, request, *args, **kwargs):
-        print(request.auth.key)
-        user = Token.objects.get(key=request.auth.key).user
-        serializer = UserSerializer(data={'user':user.id})
-        if serializer.is_valid():
-            print(serializer.validated_data)
-            serializer.save()   
-            return HttpResponse(serializer.data, status=204)
-        else:
-            return HttpResponse(serializer.data, status=403)
-            
+    def post(self,request):
+        id = str(Token.objects.get(key=request.auth.key).user.id).__str__()
+        return JsonResponse(data=k.createSvc(id), status=200)
     def get(self,request):
-        user_id = Token.objects.get(key=request.auth.key).user_id
-        user = User.objects.get(id=user_id)
+        id = str(Token.objects.get(key=request.auth.key).user.id).__str__()
+        try:
+            k.getSvcStatus(id,request.auth.key)
+            return JsonResponse(data={'status':'alive'}, status=200)
+        except:
+            return JsonResponse(data={'error':'no svc has been found'}, status=404)
+    
+    def delete(self,request):
+        id = str(Token.objects.get(key=request.auth.key).user.id).__str__()
+        try:
+            return JsonResponse(data=k.deleteSvc(id), status=200)
+        except:
+            return JsonResponse(data={'error':'internal server error'}, status=500)

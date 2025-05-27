@@ -6,5 +6,5 @@ from . import views
 urlpatterns = [
     path('deployment/', views.deploymentView.as_view()),
     path('volume/', views.volumeView.as_view()),
-    path('lab/', views.LabView.as_view())
+    path('service/', views.serviceView.as_view()),
 ]
