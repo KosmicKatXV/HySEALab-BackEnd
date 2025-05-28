@@ -40,4 +40,16 @@ class Login(generics.CreateAPIView):
             if user:
                 token, created = Token.objects.get_or_create(user=user)
                 return Response({'token': [token.key], "Sucsess":"Login SucssesFully"}, status=status.HTTP_201_CREATED )
-            return Response({'Massage': 'Invalid Username and Password'}, status=401)
+            return Response({'Message': 'Invalid Username and Password'}, status=401)
+
+class invitationView(generics.CreateAPIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    def get(self,request,name):
+        match name:
+            case 'incoming':
+                return Response({'Error': 'Invalid url'}, status=404)
+            case 'outcoming':
+                return Response({'Error': 'Invalid url'}, status=404) 
+            case _:
+                return Response({'Error': 'Invalid url'}, status=404)
