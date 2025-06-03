@@ -3,10 +3,14 @@ import os
 import yaml
 import base64
 
+from rest_framework.authtoken.models import Token
 
 #GENERAL STUFF
 ROOT_PATH = '../templates/'
 K = 'minikube kubectl -- --namespace=hysealab '
+VOL_TEMPLATE = '''        - name: hysea-lab-%(LAB_ID)s-pv
+          mountPath: "/home/jovyan/%(EMAIL)s"
+'''
 
 def labUrl(user,token):
     #return 'http://hysea-lab-'+user+'-svc.hysealab.cluster.local:'+str(30000+int(user))+'/token?='+token
@@ -26,11 +30,21 @@ def delete(object):
 
 
 #LAB FUNCTIONS
-def createLab(id,token,email):
+def volParser(id,email):
+    return VOL_TEMPLATE % {'LAB_ID':id,'EMAIL':email}
+
+def volumeListParser(id_list):
+    output = ''
+    for id in id_list:
+        output += volParser(id,Token.objects.get(key=id).user.__str__())
+    return output
+
+def createLab(id,token,email,invitation_list):
     env = {
         "LAB_ID":id,
         "USER_TOKEN":token,
-        "EMAIL":email
+        "EMAIL":email,
+        "VOL_LIST":volumeListParser(invitation_list)
     }
     return deploy('lab.yaml',env)
 def getLabStatus(l):

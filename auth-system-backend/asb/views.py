@@ -1,14 +1,16 @@
 from rest_framework.response import Response
-from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.permissions import BasePermission, IsAuthenticated, AllowAny , SAFE_METHODS
 from rest_framework.authentication import TokenAuthentication
-
+from rest_framework.authtoken.models import Token
+from django.core import serializers
+from django.http import JsonResponse
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
 from asb.serializers import *
+from asb.models import Invitation
 
 
 class UserCreate(generics.CreateAPIView):
@@ -20,9 +22,9 @@ class UserCreate(generics.CreateAPIView):
         if serializer.is_valid():
             print(serializer.validated_data)
             serializer.save()   
-            return HttpResponse(serializer.data, status=204)
+            return JsonResponse(data=serializer.data, status=204)
         else:
-            return HttpResponse(serializer.data, status=403)
+            return JsonResponse(data=serializer.data, status=403)
             
     def get(self,request):
         user_id = Token.objects.get(key=request.auth.key).user_id
@@ -43,13 +45,33 @@ class Login(generics.CreateAPIView):
             return Response({'Message': 'Invalid Username and Password'}, status=401)
 
 class invitationView(generics.CreateAPIView):
+    #autentica
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
-    def get(self,request,name):
-        match name:
-            case 'incoming':
-                return Response({'Error': 'Invalid url'}, status=404)
-            case 'outcoming':
-                return Response({'Error': 'Invalid url'}, status=404) 
-            case _:
-                return Response({'Error': 'Invalid url'}, status=404)
+    def post(self,request):
+        user = Token.objects.get(key=request.auth.key).user
+        try:
+            guest = CustomUser.objects.get(email=request.data.get('guest'))
+        except:
+            return JsonResponse(data={'error':'invalid guest'}, status=404)
+        try:
+            invitation = Invitation.add_relationship(user,guest)
+        except Exception as e:
+            print(e)
+        return JsonResponse(data={}, status=200)
+
+    def get(self,request):
+        user = Token.objects.get(key=request.auth.key).user
+        outcoming = Invitation.get_invited(user)
+        incoming = Invitation.get_invitations(user)
+        return JsonResponse(data={
+                                    'outcoming':list(outcoming.values('email')),
+                                    'incoming':list(incoming.values('email')),
+                                    }, status=200)
+    
+    def delete(self,request):
+        id = str(Token.objects.get(key=request.auth.key).user.id).__str__()
+        try:
+            return JsonResponse(data=k.deleteSvc(id), status=200)
+        except:
+            return JsonResponse(data={'error':'internal server error'}, status=500)

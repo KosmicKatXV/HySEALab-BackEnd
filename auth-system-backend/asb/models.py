@@ -4,7 +4,7 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save, post_delete
 from django.conf import settings
 from rest_framework.authtoken.models import Token
-import k8s.k8s as k
+from k8s.k8s import createSecretToken, deleteSecretToken
 class CustomUserManager(BaseUserManager):
    def _create_user(self, email, password, **extra_fields):
         if not email:
@@ -48,32 +48,36 @@ class CustomUser(AbstractUser):
 def create_auth_token(sender, instance=None, created=False, **kwargs):
    if created:
       token = Token.objects.create(user=instance)
-      k.createSecretToken(instance.id,token.key)
+      createSecretToken(instance.id,token.key)
         
 @receiver(post_delete, sender=settings.AUTH_USER_MODEL)
 def delete_secret_token(sender, instance, **kwargs):
-   k.deleteSecretToken(instance.id)
+   deleteSecretToken(instance.id)
 
 class Invitation(models.Model):
    from_person = models.ForeignKey(CustomUser, related_name='from_people',on_delete=models.CASCADE)
    to_person = models.ForeignKey(CustomUser, related_name='to_people',on_delete=models.CASCADE)
+   class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["from_person", "to_person"], name='unique_intro'),
+        ]
 
-   def add_relationship(self, person, status):
-      relationship, created = Relationship.objects.get_or_create(
+   def add_relationship(self, person):
+      relationship = Invitation.objects.create(
          from_person=self,
          to_person=person)
       return relationship
 
-   def remove_relationship(self, person, status):
-      Relationship.objects.filter(
+   def remove_relationship(self, person):
+      Invitation.objects.filter(
          from_person=self,
          to_person=person).delete()
       return
 
    def get_invited(self):
-      return self.relationships.filter(
+      return self.invited_users.filter(
         to_people__from_person=self)
 
    def get_invitations(self):
-      return self.related_to.filter(
+      return self.invited_users.filter(
          from_people__to_person=self)
