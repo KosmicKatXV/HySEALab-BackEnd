@@ -68,16 +68,16 @@ class Invitation(models.Model):
          to_person=person)
       return relationship
 
-   def remove_relationship(self, person):
+   def remove_relationship(user, person):
       Invitation.objects.filter(
-         from_person=self,
+         from_person=user,
          to_person=person).delete()
       return
 
-   def get_invited(self):
-      return self.invited_users.filter(
-        to_people__from_person=self)
+   def get_invited(user):
+      return Invitation.objects.filter(
+        to_person=user)
 
-   def get_invitations(self):
-      return self.invited_users.filter(
-         from_people__to_person=self)
+   def get_invitations(user):
+      return Invitation.objects.filter(
+         from_person=user)

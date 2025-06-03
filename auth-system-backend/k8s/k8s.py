@@ -3,8 +3,6 @@ import os
 import yaml
 import base64
 
-from rest_framework.authtoken.models import Token
-
 #GENERAL STUFF
 ROOT_PATH = '../templates/'
 K = 'minikube kubectl -- --namespace=hysealab '
@@ -20,6 +18,7 @@ def deploy(filename,env):
     for x in env:
         os.system('echo $'+x)
         os.putenv(x,env[x])
+    os.system('envsubst < '+ROOT_PATH+filename)
     return yaml.full_load(subprocess.check_output('envsubst < '+ROOT_PATH+filename+' | '+K+' apply -o yaml -f -', shell=True))
 
 def get(object):
@@ -33,10 +32,10 @@ def delete(object):
 def volParser(id,email):
     return VOL_TEMPLATE % {'LAB_ID':id,'EMAIL':email}
 
-def volumeListParser(id_list):
+def volumeListParser(invitation_list):
     output = ''
-    for id in id_list:
-        output += volParser(id,Token.objects.get(key=id).user.__str__())
+    for i in invitation_list:
+        output += volParser(i.get('id'),i.get('email'))
     return output
 
 def createLab(id,token,email,invitation_list):
@@ -47,6 +46,7 @@ def createLab(id,token,email,invitation_list):
         "VOL_LIST":volumeListParser(invitation_list)
     }
     return deploy('lab.yaml',env)
+
 def getLabStatus(l):
     try:
         return get('pod -l app=hysea-lab-'+l.__str__()).get('items')[0].get('status').get('containerStatuses')[0]

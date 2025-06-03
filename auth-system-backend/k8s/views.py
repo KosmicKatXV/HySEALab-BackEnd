@@ -9,6 +9,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from django.contrib.auth import get_user_model
 
+from asb.models  import Invitation
 import k8s.k8s as k
 User = get_user_model()
 
@@ -20,13 +21,18 @@ class deploymentView(generics.CreateAPIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     def post(self,request):
-        id = str(Token.objects.get(key=request.auth.key).user.id)
-        email = Token.objects.get(key=request.auth.key).user.__str__()
+        user = Token.objects.get(key=request.auth.key).user
+        email = user.__str__()
+        id = str(user.id)
+        invitation_list = []
+        for i in Invitation.get_invited(user):
+            invitation_list.append({'email':i.from_person.__str__(),
+                                    'id':str(i.id)})
         #comprueba si hay lab asignado al usuario
-        if not k.getLabStatus(id).get('ready'):
-            return JsonResponse(data=k.createLab(id,request.auth.key,email,[]), status=200)
-        else:
-            return JsonResponse(data={'warning':'A lab has already been deployed. No action has been taken'}, status=200)
+        #if not k.getLabStatus(id).get('ready'):
+        return JsonResponse(data=k.createLab(id,request.auth.key,email,invitation_list), status=200)
+        #else:
+        #    return JsonResponse(data={'warning':'A lab has already been deployed. No action has been taken'}, status=200)
     def get(self,request):
         lab = str(Token.objects.get(key=request.auth.key).user.id)
         try:

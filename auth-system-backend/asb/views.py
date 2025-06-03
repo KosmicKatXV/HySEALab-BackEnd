@@ -44,6 +44,16 @@ class Login(generics.CreateAPIView):
                 return Response({'token': [token.key], "Sucsess":"Login SucssesFully"}, status=status.HTTP_201_CREATED )
             return Response({'Message': 'Invalid Username and Password'}, status=401)
 
+class getUserFromToken(generics.CreateAPIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    def get(self,request):
+            user = Token.objects.get(key=request.auth.key).user
+            return JsonResponse(data={  'fname':user.first_name,
+                                        'lname':user.last_name,
+                                        'email':user.email}, status=200)
+        
+
 class invitationView(generics.CreateAPIView):
     #autentica
     authentication_classes = [TokenAuthentication]
@@ -63,15 +73,26 @@ class invitationView(generics.CreateAPIView):
     def get(self,request):
         user = Token.objects.get(key=request.auth.key).user
         outcoming = Invitation.get_invited(user)
+        o_l = []
         incoming = Invitation.get_invitations(user)
+        i_l = []
+        for o in outcoming :
+            o_l.append({'email':o.from_person.__str__(),
+                        'delete':False})
+        for i in incoming :
+            i_l.append({'email':i.to_person.__str__(),
+                        'delete':False})
         return JsonResponse(data={
-                                    'outcoming':list(outcoming.values('email')),
-                                    'incoming':list(incoming.values('email')),
-                                    }, status=200)
+                                   'outcoming':list(o_l),
+                                   'incoming':list(i_l),
+                                   }, status=200)
     
-    def delete(self,request):
-        id = str(Token.objects.get(key=request.auth.key).user.id).__str__()
+    def delete(self,request,email):
+        user = Token.objects.get(key=request.auth.key).user
         try:
-            return JsonResponse(data=k.deleteSvc(id), status=200)
-        except:
-            return JsonResponse(data={'error':'internal server error'}, status=500)
+            guest = CustomUser.objects.get(email=email)
+            Invitation.remove_relationship(user,guest)
+            return JsonResponse(data={'removed_invite_to':email}, status=200)
+        except Exception as e:
+            return JsonResponse(data={'error':e.__str__(),
+                                        'guest':email}, status=500)

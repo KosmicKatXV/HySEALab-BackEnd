@@ -8,7 +8,9 @@ urlpatterns = [
     path('api/register/', views.UserCreate.as_view()),
     path('api/login/', views.Login.as_view()),
     path('api/auth/', obtain_auth_token, name='auth'),
+    path('api/token/', views.getUserFromToken.as_view()),
     path('invitation/',views.invitationView.as_view()),
+    path('invitation/<str:email>',views.invitationView.as_view()),
     path('k8s/', include('k8s.urls')),
     path('job_dispatcher/', include('job_dispatcher.urls')) 
 ]
