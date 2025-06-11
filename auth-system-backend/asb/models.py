@@ -4,7 +4,7 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save, post_delete
 from django.conf import settings
 from rest_framework.authtoken.models import Token
-from k8s.k8s import createSecretToken, deleteSecretToken
+import k8s as k
 class CustomUserManager(BaseUserManager):
    def _create_user(self, email, password, **extra_fields):
         if not email:
@@ -45,14 +45,25 @@ class CustomUser(AbstractUser):
       return self.email
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
+def register_user_k8s(sender, instance=None, created=False, **kwargs):
    if created:
+      email = user.__str__()
+      id = str(user.id)
       token = Token.objects.create(user=instance)
-      createSecretToken(instance.id,token.key)
+      #Create token
+      k.createSecretToken(instance.id,token.key)
+      #Create deployment
+      invitation_list = []
+      #Create PVC
+      k.createPVC(id)
+      #Create PV
+      k.createPV(id,email)
+      #Create Service
+      k.createSvc(id)
         
 @receiver(post_delete, sender=settings.AUTH_USER_MODEL)
-def delete_secret_token(sender, instance, **kwargs):
-   deleteSecretToken(instance.id)
+def delete_user_k8s(sender, instance, **kwargs):
+   k.deleteSecretToken(instance.id)
 
 class Invitation(models.Model):
    from_person = models.ForeignKey(CustomUser, related_name='from_people',on_delete=models.CASCADE)

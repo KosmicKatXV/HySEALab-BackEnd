@@ -15,7 +15,7 @@ from asb.models import Invitation
 
 class UserCreate(generics.CreateAPIView):
     authentication_classes = []
-    permission_classes = (AllowAny,)
+    permission_classes = [AllowAny]
     #serializer_class = UserSerializer
     def post (self, request, *args, **kwargs):
         serializer = UserSerializer(data=request.data)

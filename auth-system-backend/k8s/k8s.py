@@ -6,13 +6,17 @@ import base64
 #GENERAL STUFF
 ROOT_PATH = '../templates/'
 K = 'minikube kubectl -- --namespace=hysealab '
-VOL_TEMPLATE = '''        - name: hysea-lab-%(LAB_ID)s-pv
+PV_TEMPLATE = '''        - name: hysea-lab-%(LAB_ID)s-pv
           mountPath: "/home/jovyan/%(EMAIL)s"
 '''
+PVC_TEMPLATE = '''      - name: hysea-lab-%(LAB_ID)s-pv
+        persistentVolumeClaim:
+          claimName: hysea-lab-%(LAB_ID)s-pvc
+'''
 
-def labUrl(user,token):
+def labUrl(ip,user,token):
     #return 'http://hysea-lab-'+user+'-svc.hysealab.cluster.local:'+str(30000+int(user))+'/token?='+token
-    return 'http://$(minikube ip):'+str(30000+int(user))+'/token?='+token
+    return 'http://'+ip+':'+str(30000+int(user))+'/lab?token='+token
 
 def deploy(filename,env):
     for x in env:
@@ -29,13 +33,22 @@ def delete(object):
 
 
 #LAB FUNCTIONS
-def volParser(id,email):
-    return VOL_TEMPLATE % {'LAB_ID':id,'EMAIL':email}
+def PVParser(id,email):
+    return PV_TEMPLATE % {'LAB_ID':id,'EMAIL':email}
 
-def volumeListParser(invitation_list):
+def PVCParser(id):
+    return PVC_TEMPLATE % {'LAB_ID':id}
+
+def PVListParser(invitation_list):
     output = ''
     for i in invitation_list:
-        output += volParser(i.get('id'),i.get('email'))
+        output += PVParser(i.get('id'),i.get('email'))
+    return output
+
+def PVCListParser(invitation_list):
+    output = ''
+    for i in invitation_list:
+        output += PVCParser(i.get('id'))
     return output
 
 def createLab(id,token,email,invitation_list):
@@ -43,7 +56,8 @@ def createLab(id,token,email,invitation_list):
         "LAB_ID":id,
         "USER_TOKEN":token,
         "EMAIL":email,
-        "VOL_LIST":volumeListParser(invitation_list)
+        "PV_LIST":PVListParser(invitation_list),
+        "PVC_LIST":PVCListParser(invitation_list)
     }
     return deploy('lab.yaml',env)
 
@@ -53,8 +67,11 @@ def getLabStatus(l):
     except:
         return {'ready':False}
 
-def getLab(l):
-    return get('pod -l app=hysea-lab-'+l.__str__()).get('items')[0]
+def getLab(id,token):
+    output = get('pod -l app=hysea-lab-'+id).get('items')[0]
+    ip = output.get('status').get('hostIP') 
+    output.update({'url':labUrl(ip,id,token)})
+    return output
 
 def deleteLab(l):
     return delete('deployment.apps/hysea-lab-'+l.__str__())
