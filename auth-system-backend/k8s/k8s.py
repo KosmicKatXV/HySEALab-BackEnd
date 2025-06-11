@@ -74,8 +74,10 @@ def getLab(id,token):
     return output
 
 def deleteLab(l):
-    return delete('deployment.apps/hysea-lab-'+l.__str__())
-
+    try:
+        return delete('deployment.apps/hysea-lab-'+l.__str__())
+    except:
+        return {'warning':'no lab found'}
 
 #SERVICE FUNCTIONS
 def createSvc(id):
@@ -87,7 +89,7 @@ def createSvc(id):
     #return subprocess.check_output(K+' expose deployment/hysea-lab-'+id+' --type="NodePort" --name=hysea-lab-'+id+'-svc -o yaml', shell=True)
 
 def deleteSvc(id):
-    return delete('hysea-lab-'+id+'-svc')
+    return delete('svc hysea-lab-'+id+'-svc')
     #return subprocess.check_output(K+' expose deployment/hysea-lab-'+id+' --type="NodePort" --name=hysea-lab-'+id+'-svc -o yaml', shell=True)
 
 def getSvcStatus(user,token):

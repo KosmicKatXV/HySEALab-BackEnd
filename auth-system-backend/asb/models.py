@@ -4,7 +4,7 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save, post_delete
 from django.conf import settings
 from rest_framework.authtoken.models import Token
-import k8s as k
+import k8s.k8s as k
 class CustomUserManager(BaseUserManager):
    def _create_user(self, email, password, **extra_fields):
         if not email:
@@ -47,13 +47,14 @@ class CustomUser(AbstractUser):
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def register_user_k8s(sender, instance=None, created=False, **kwargs):
    if created:
-      email = user.__str__()
-      id = str(user.id)
-      token = Token.objects.create(user=instance)
+      email = instance.email
+      id = str(instance.id)
+      token = str(Token.objects.create(user=instance))
       #Create token
-      k.createSecretToken(instance.id,token.key)
+      k.createSecretToken(instance.id,token)
       #Create deployment
       invitation_list = []
+      k.createLab(id,token,email,invitation_list)
       #Create PVC
       k.createPVC(id)
       #Create PV
@@ -63,7 +64,17 @@ def register_user_k8s(sender, instance=None, created=False, **kwargs):
         
 @receiver(post_delete, sender=settings.AUTH_USER_MODEL)
 def delete_user_k8s(sender, instance, **kwargs):
-   k.deleteSecretToken(instance.id)
+   id = str(instance.id)
+   #Delete token
+   k.deleteSecretToken(id)
+   #Delete deployment
+   k.deleteLab(id)
+   #Delete PVC
+   k.deletePVC(id)
+   #Delete PV
+   k.deletePV(id)
+   #Delete Service
+   k.deleteSvc(id)
 
 class Invitation(models.Model):
    from_person = models.ForeignKey(CustomUser, related_name='from_people',on_delete=models.CASCADE)
