@@ -115,9 +115,10 @@ def deleteSecretToken(user):
 
 
 #PVC FUNCTIONS
-def createPVC(id):
+def createPVC(id,squota):
     env = {
-        'VOL_ID':str(id)
+        'VOL_ID':str(id),
+        'SPACE_QUOTA':squota
     }
     return deploy('pvc.yaml',env)
 

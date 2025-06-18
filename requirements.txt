@@ -5,3 +5,5 @@ django-filter
 django-rest-knox
 django-cors-headers 
 pyyaml
+django-celery-beat
+redis

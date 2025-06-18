@@ -62,9 +62,9 @@ class volumeView(generics.CreateAPIView):
         return JsonResponse(data=k.createPV(id,email), status=200)
 
     def get(self,request):
-        lab = str(Token.objects.get(key=request.auth.key).user.id)
+        id = str(Token.objects.get(key=request.auth.key).user.id)
         try:
-            return JsonResponse(data=k.getLab(lab), status=200)
+            return JsonResponse(data=k.getPV(id), status=200)
         except:
             return JsonResponse(data={'error':'no lab has been found'}, status=404)
     

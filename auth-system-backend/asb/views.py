@@ -12,6 +12,8 @@ User = get_user_model()
 from asb.serializers import *
 from asb.models import Invitation
 
+from urllib.parse import urlparse
+from urllib.parse import parse_qs
 
 class UserCreate(generics.CreateAPIView):
     authentication_classes = []
@@ -86,7 +88,11 @@ class invitationView(generics.CreateAPIView):
                                    'outcoming':list(o_l),
                                    'incoming':list(i_l),
                                    }, status=200)
-    
+
+class outcomingDelete(generics.CreateAPIView):
+    #autentica
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]   
     def delete(self,request,email):
         user = Token.objects.get(key=request.auth.key).user
         try:
@@ -96,3 +102,18 @@ class invitationView(generics.CreateAPIView):
         except Exception as e:
             return JsonResponse(data={'error':e.__str__(),
                                         'guest':email}, status=500)
+                                        
+class incomingDelete(generics.CreateAPIView):
+    #autentica
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]   
+    def delete(self,request,email):
+        user = Token.objects.get(key=request.auth.key).user
+        try:
+            host = CustomUser.objects.get(email=email)
+            Invitation.remove_relationship(host,user)
+            return JsonResponse(data={'removed_invite_from':email}, status=200)
+        except Exception as e:
+            return JsonResponse(data={'error':e.__str__(),
+                                        'host':email}, status=500)
+ 

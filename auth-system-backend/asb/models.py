@@ -40,6 +40,7 @@ class CustomUser(AbstractUser):
                                           through='Invitation',
                                           symmetrical=False,
                                           related_name='invited')
+   SPACE_QUOTA = models.TextField(default='512Mi')
 
    def __str__(self):
       return self.email
@@ -56,11 +57,15 @@ def register_user_k8s(sender, instance=None, created=False, **kwargs):
       invitation_list = []
       k.createLab(id,token,email,invitation_list)
       #Create PVC
-      k.createPVC(id)
+      k.createPVC(id,instance.SPACE_QUOTA)
       #Create PV
       k.createPV(id,email)
       #Create Service
       k.createSvc(id)
+   else:
+      id = str(instance.id)
+      k.createPVC(id,instance.SPACE_QUOTA)
+
         
 @receiver(post_delete, sender=settings.AUTH_USER_MODEL)
 def delete_user_k8s(sender, instance, **kwargs):
@@ -76,6 +81,7 @@ def delete_user_k8s(sender, instance, **kwargs):
    #Delete Service
    k.deleteSvc(id)
 
+
 class Invitation(models.Model):
    from_person = models.ForeignKey(CustomUser, related_name='from_people',on_delete=models.CASCADE)
    to_person = models.ForeignKey(CustomUser, related_name='to_people',on_delete=models.CASCADE)
@@ -90,10 +96,10 @@ class Invitation(models.Model):
          to_person=person)
       return relationship
 
-   def remove_relationship(user, person):
+   def remove_relationship(host, guest):
       Invitation.objects.filter(
-         from_person=user,
-         to_person=person).delete()
+         from_person=host,
+         to_person=guest).delete()
       return
 
    def get_invited(user):
