@@ -2,6 +2,7 @@ import subprocess
 import os
 import yaml
 import base64
+import k8s.settings as s
 
 #GENERAL STUFF
 ROOT_PATH = '../templates/'
@@ -12,6 +13,13 @@ PV_TEMPLATE = '''        - name: hysea-lab-%(LAB_ID)s-pv
 PVC_TEMPLATE = '''      - name: hysea-lab-%(LAB_ID)s-pv
         persistentVolumeClaim:
           claimName: hysea-lab-%(LAB_ID)s-pvc
+'''
+TOOLBOX_PV_TEMPLATE = '''        - name: toolbox-pv
+          mountPath: "/home/jovyan/toolbox"
+'''
+TOOLBOX_PVC_TEMPLATE = '''      - name: toolbox-pv
+        persistentVolumeClaim:
+          claimName: toolbox-pvc
 '''
 
 def labUrl(ip,user,token):
@@ -52,12 +60,15 @@ def PVCListParser(invitation_list):
     return output
 
 def createLab(id,token,email,invitation_list):
+    print(s.TOOLBOX_ENABLED)
     env = {
         "LAB_ID":id,
         "USER_TOKEN":token,
         "EMAIL":email,
         "PV_LIST":PVListParser(invitation_list),
-        "PVC_LIST":PVCListParser(invitation_list)
+        "PVC_LIST":PVCListParser(invitation_list),
+        "TOOLBOX_PV": TOOLBOX_PV_TEMPLATE if s.TOOLBOX_ENABLED else "",
+        "TOOLBOX_PVC": TOOLBOX_PVC_TEMPLATE if s.TOOLBOX_ENABLED else ""
     }
     return deploy('lab.yaml',env)
 
@@ -160,3 +171,27 @@ def deletePV(user):
         return delete('pv hysea-lab-'+str(user)+'-pv')
     except:
         return {'warning':'no secret has been found'}
+
+#TOOLBOX FUNCTIONS
+def createToolBoxPVC():
+    env = []
+    print(deploy('toolbox-pvc.yaml',env))
+
+def deleteToolBoxPVC():
+    print(delete('pvc toolbox-pvc'))
+
+def createToolBoxPV():
+    env = []
+    print(deploy('toolbox-pv.yaml',env))
+
+def deleteToolBoxPV():
+    print(delete('pv toolbox-pv'))
+
+def createGitSyncPod(url):
+    env = {
+        "REPO_URL":url
+    }
+    print(deploy('git-sync.yaml',env))
+
+def deleteGitSyncPod(l):
+    print(delete('deployment.apps/git-sync'))
