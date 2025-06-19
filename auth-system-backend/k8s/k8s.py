@@ -39,7 +39,11 @@ def get(object):
 def delete(object):
     return {'name':subprocess.check_output(K+" delete "+object+' -o name',shell=True)}
 
-
+def patchPVC(pvc):
+    try:
+        return subprocess.check_output(K+" patch pvc "+pvc+" '{\"metadata\":{\"finalizers\":null}}'", shell=True)
+    except:
+        return 'not found'
 #LAB FUNCTIONS
 def PVParser(id,email):
     return PV_TEMPLATE % {'LAB_ID':id,'EMAIL':email}
@@ -178,6 +182,7 @@ def createToolBoxPVC():
     print(deploy('toolbox-pvc.yaml',env))
 
 def deleteToolBoxPVC():
+    patchPVC('toolbox-pvc')
     print(delete('pvc toolbox-pvc'))
 
 def createToolBoxPV():
@@ -193,5 +198,5 @@ def createGitSyncPod(url):
     }
     print(deploy('git-sync.yaml',env))
 
-def deleteGitSyncPod(l):
+def deleteGitSyncPod():
     print(delete('deployment.apps/git-sync'))

@@ -9,9 +9,9 @@ if s.TOOLBOX_ENABLED:
     #Create PV
     k.createToolBoxPV()
 else:
-   #Delete deployment
-   k.deleteGitSyncPod()
-   #Delete PVC
-   k.deleteToolBoxPVC()
-   #Delete PV
-   k.deleteToolBoxPV()
+    #Delete deployment
+    k.deleteGitSyncPod()
+    #Delete PVC
+    k.deleteToolBoxPVC()
+    #Delete PV
+    k.deleteToolBoxPV()
