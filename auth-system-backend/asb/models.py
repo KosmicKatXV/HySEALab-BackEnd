@@ -64,6 +64,9 @@ def register_user_k8s(sender, instance=None, created=False, **kwargs):
       k.createSvc(id)
    else:
       id = str(instance.id)
+      #Delete PVC
+      k.deletePVC(id)
+      #Create new PVC
       k.createPVC(id,instance.SPACE_QUOTA)
 
         

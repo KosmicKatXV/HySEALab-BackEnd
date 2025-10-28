@@ -15,7 +15,7 @@ PVC_TEMPLATE = '''      - name: hysea-lab-%(LAB_ID)s-pv
           claimName: hysea-lab-%(LAB_ID)s-pvc
 '''
 TOOLBOX_PV_TEMPLATE = '''        - name: toolbox-pv
-          mountPath: "/home/jovyan/toolbox"
+          mountPath: "/home/jovyan"
 '''
 TOOLBOX_PVC_TEMPLATE = '''      - name: toolbox-pv
         persistentVolumeClaim:
