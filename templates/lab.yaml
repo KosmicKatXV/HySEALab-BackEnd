@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hysea-lab-$LAB_ID
+  namespace: hysealab
+  labels:
+    app: hysea-lab-$LAB_ID
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hysea-lab-$LAB_ID
+  template:
+    metadata:
+      labels:
+        app: hysea-lab-$LAB_ID
+    spec:
+      containers:
+      - name: hysea-lab-$LAB_ID
+        image: quay.io/jupyter/base-notebook
+        command: ["start-notebook.py"]
+        args: ["--NotebookApp.token='$USER_TOKEN'"]
+        ports:
+          # Inside the cluster, what port does the service expose?
+          - containerPort: 8888
+        env:
+        - name: USER_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: user-$LAB_ID
+              key: password
+        volumeMounts:
+        - name: hysea-lab-$LAB_ID-pv
+          mountPath: "/home/jovyan/work"
+$TOOLBOX_PV
+$PV_LIST
+      
+      volumes:
+      - name: hysea-lab-$LAB_ID-pv
+        persistentVolumeClaim:
+          claimName: hysea-lab-$LAB_ID-pvc
+$TOOLBOX_PVC
+$PVC_LIST

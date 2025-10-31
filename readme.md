@@ -9,6 +9,10 @@ Therefore the purpose of this project is to develop an easy-to-use and accessibl
 
 ## What does this repository contain ?
 This repository contains the BackEnd of HySEA LABS. It has been built using [Django](https://www.djangoproject.com/) and is meant to run on a [Kubernetes cluster](https://kubernetes.io/).
+## Requirements
+- [Kubectl](https://kubernetes.io/docs/reference/kubectl/)
+- [MiniKube](https://minikube.sigs.k8s.io/docs/)
+- [HySEALab FrontEnd](github.com/KosmicKatXV/HySEALab-FrontEnd)
 ## How to install?
 ```bash
 #We download the backend repository
