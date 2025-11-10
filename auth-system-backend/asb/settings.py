@@ -62,7 +62,7 @@ MIDDLEWARE = [
 CORS_ALLOW_ALL_ORIGINS = True #CAMBIAR PARA PRODUCCION IMPORTANTE
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5174",  # Frontend en localhost (React/Vue/Angular)
+    "http://localhost:5173",  # Frontend en localhost (React/Vue/Angular)
     "https://tu-dominio-de-produccion.com",
 ]
 
