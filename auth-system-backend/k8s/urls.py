@@ -7,5 +7,5 @@ urlpatterns = [
     path('deployment/', views.deploymentView.as_view()),
     path('volume/', views.volumeView.as_view()),
     path('service/', views.serviceView.as_view()),
-    path('secrets/', views.secretView.as_view()),
+    path('secrets/', views.secretView.as_view())
 ]
