@@ -1,5 +1,9 @@
 rm -f db.sqlite3
-minikube delete -all
+
+#nuke option. Comment
+#minikube delete --all
+#sudo systemctl start docker
+#minikube start
 
 minikube kubectl -- --namespace=hysealab delete all --all
 minikube kubectl -- --namespace=hysealab delete pvc --all
